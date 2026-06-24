@@ -1,8 +1,11 @@
+/*
+Copyright © 2026 NAME HERE <EMAIL ADDRESS>
+
+*/
 package main
 
-import (
-  "fmt"
-)
+import "aevra.dev/brain/cmd"
 
 func main() {
+	cmd.Execute()
 }
