@@ -17,7 +17,7 @@ func getVaultPath() (string, error) {
 	}
 
 	exeDir := filepath.Dir(exePath)
-	configPath := filepath.Join(exeDir, "config.json")
+	configPath := filepath.Join(exeDir, "vault.json")
 
 	file, err := os.Open(configPath)
 	if err != nil {
