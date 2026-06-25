@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -30,6 +31,10 @@ func getVaultPath() (string, error) {
 	err = json.NewDecoder(file).Decode(&config)
 	if err != nil {
 		return "", err
+	}
+
+	if config.VaultPath == "" {
+		return "", fmt.Errorf("vaultPath is missing from vault.json")
 	}
 
 	return config.VaultPath, nil
