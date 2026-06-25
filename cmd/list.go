@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"os"
+	"io/fs"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -16,16 +17,18 @@ var listCMD = &cobra.Command{
 			return
 		}
 
-		fmt.Println("Vault path:", vaultPath)
+		err = filepath.WalkDir(vaultPath, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
 
-		entries, err := os.ReadDir(vaultPath)
+			fmt.Println(path)
+			return nil
+		})
+
 		if err != nil {
-			fmt.Println("Error reading vault:", err)
+			fmt.Println("Error walking vault:", err)
 			return
-		}
-
-		for _, entry := range entries {
-			fmt.Printf("Name: %s | IsDir: %t\n", entry.Name(), entry.IsDir())
 		}
 	},
 }
