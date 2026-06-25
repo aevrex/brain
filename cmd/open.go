@@ -6,9 +6,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/sahilm/fuzzy"
+
 )
 
 var openCmd = &cobra.Command{
@@ -41,16 +42,9 @@ var openCmd = &cobra.Command{
 }
 
 func findClosestNote(vaultPath string, searchTerm string) (string, error) {
-	var bestMatch string
-	bestScore := 0
+	var notes []string
 
-	searchTerm = strings.ToLower(searchTerm)
-
-	err := filepath.WalkDir(vaultPath, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
+	err := walkVault(vaultPath, func(path string, d fs.DirEntry) error {
 		if d.IsDir() {
 			return nil
 		}
@@ -59,14 +53,7 @@ func findClosestNote(vaultPath string, searchTerm string) (string, error) {
 			return nil
 		}
 
-		fileName := strings.ToLower(d.Name())
-		score := scoreMatch(fileName, searchTerm)
-
-		if score > bestScore {
-			bestScore = score
-			bestMatch = path
-		}
-
+		notes = append(notes, path)
 		return nil
 	})
 
@@ -74,37 +61,12 @@ func findClosestNote(vaultPath string, searchTerm string) (string, error) {
 		return "", err
 	}
 
-	if bestMatch == "" {
+	matches := fuzzy.Find(searchTerm, notes)
+	if len(matches) == 0 {
 		return "", fmt.Errorf("no matching note found for %q", searchTerm)
 	}
 
-	return bestMatch, nil
-}
-
-func scoreMatch(fileName string, searchTerm string) int {
-	if fileName == searchTerm {
-		return 100
-	}
-
-	if strings.TrimSuffix(fileName, filepath.Ext(fileName)) == searchTerm {
-		return 90
-	}
-
-	if strings.Contains(fileName, searchTerm) {
-		return 70
-	}
-
-	score := 0
-	searchIndex := 0
-
-	for _, char := range fileName {
-		if searchIndex < len(searchTerm) && char == rune(searchTerm[searchIndex]) {
-			score += 5
-			searchIndex++
-		}
-	}
-
-	return score
+	return notes[matches[0].Index], nil
 }
 
 func openInNotepad(path string) error {
